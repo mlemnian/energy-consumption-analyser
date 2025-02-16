@@ -1,7 +1,6 @@
 import json
 import pandas as pd
 from datetime import datetime
-# pip install matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -37,7 +36,7 @@ def getValues(series):
 def render_plot(categories, direct_values, battery_values, external_values, wp_heating_values, wp_water_values):
     # Create the bar plot
     plt.bar(categories, direct_values, label='Direkt Verbrauch', color='yellow')
-    plt.bar(categories, battery_values, bottom=direct_values, label='Baterie Verbrauch', color='green')
+    plt.bar(categories, battery_values, bottom=direct_values, label='Batterie Verbrauch', color='green')
     plt.bar(categories, external_values, bottom=(battery_values + direct_values), label='Externer Verbrauch', color='grey')
     plt.plot(categories, wp_heating_values, label='WP Heizung Verbrauch', color='blue')
     plt.plot(categories, wp_water_values, label='WP Warmwasser Verbrauch', color='red')
@@ -52,21 +51,24 @@ def render_plot(categories, direct_values, battery_values, external_values, wp_h
     # Show the plot
     plt.show()
 
+def main():
+    pv_data = readJson('2025_01.json')
 
-pv_data = readJson('2025_01.json')
+    batterySeries = pv_data['settings']['series'][0]['data']
+    directSeries = pv_data['settings']['series'][1]['data']
+    externalSeries = pv_data['settings']['series'][2]['data']
 
-batterySeries = pv_data['settings']['series'][0]['data']
-directSeries = pv_data['settings']['series'][1]['data']
-externalSeries = pv_data['settings']['series'][2]['data']
+    categories = getCategories(batterySeries)
+    direct_values = getValues(directSeries)
+    battery_values = getValues(batterySeries)
+    external_values = getValues(externalSeries)
 
-categories = getCategories(batterySeries)
-direct_values = getValues(directSeries)
-battery_values = getValues(batterySeries)
-external_values = getValues(externalSeries)
+    wp_data = readCsv('energy_data_2025.csv')
 
-wp_data = readCsv('energy_data_2025.csv')
+    wp_heating_values = [item[1]/1000.0 for item in wp_data.values[:31]]
+    wp_water_values = [item[2]/1000.0 for item in wp_data.values[:31]]
 
-wp_heating_values = [item[1]/1000.0 for item in wp_data.values[:31]]
-wp_water_values = [item[2]/1000.0 for item in wp_data.values[:31]]
+    render_plot(categories, direct_values, battery_values, external_values, wp_heating_values, wp_water_values)
 
-render_plot(categories, direct_values, battery_values, external_values, wp_heating_values, wp_water_values)
+if __name__ == "__main__":
+    main()
