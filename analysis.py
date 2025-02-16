@@ -34,35 +34,39 @@ def getValues(series):
     return np.array([item[1] for item in series])
 
 
-data = readJson('2025_01.json')
+def render_plot(categories, direct_values, battery_values, external_values, wp_heating_values, wp_water_values):
+    # Create the bar plot
+    plt.bar(categories, direct_values, label='Direkt Verbrauch', color='yellow')
+    plt.bar(categories, battery_values, bottom=direct_values, label='Baterie Verbrauch', color='green')
+    plt.bar(categories, external_values, bottom=(battery_values + direct_values), label='Externer Verbrauch', color='grey')
+    plt.plot(categories, wp_heating_values, label='WP Heizung Verbrauch', color='blue')
+    plt.plot(categories, wp_water_values, label='WP Warmwasser Verbrauch', color='red')
+
+    plt.legend()
+
+    # Add labels and title
+    plt.xlabel('Days')
+    plt.ylabel('kWh')
+    plt.title('Stromverbrauch im Januar 2025')
+
+    # Show the plot
+    plt.show()
+
+
+pv_data = readJson('2025_01.json')
+
+batterySeries = pv_data['settings']['series'][0]['data']
+directSeries = pv_data['settings']['series'][1]['data']
+externalSeries = pv_data['settings']['series'][2]['data']
+
+categories = getCategories(batterySeries)
+direct_values = getValues(directSeries)
+battery_values = getValues(batterySeries)
+external_values = getValues(externalSeries)
 
 wp_data = readCsv('energy_data_2025.csv')
 
 wp_heating_values = [item[1]/1000.0 for item in wp_data.values[:31]]
 wp_water_values = [item[2]/1000.0 for item in wp_data.values[:31]]
 
-batterySeries = data['settings']['series'][0]['data']
-directSeries = data['settings']['series'][1]['data']
-externalSeries = data['settings']['series'][2]['data']
-
-categories = getCategories(batterySeries)
-battery_values = getValues(batterySeries)
-direct_values = getValues(directSeries)
-external_values = getValues(externalSeries)
-
-# Create the bar plot
-plt.bar(categories, direct_values, label='Direkt Verbrauch', color='yellow')
-plt.bar(categories, battery_values, bottom=direct_values, label='Baterie Verbrauch', color='green')
-plt.bar(categories, external_values, bottom=(battery_values + direct_values), label='Externer Verbrauch', color='grey')
-plt.plot(categories, wp_heating_values, label='WP Heizung Verbrauch', color='blue')
-plt.plot(categories, wp_water_values, label='WP Warmwasser Verbrauch', color='red')
-
-plt.legend()
-
-# Add labels and title
-plt.xlabel('Days')
-plt.ylabel('kWh')
-plt.title('Stromverbrauch im Januar 2025')
-
-# Show the plot
-plt.show()
+render_plot(categories, direct_values, battery_values, external_values, wp_heating_values, wp_water_values)
